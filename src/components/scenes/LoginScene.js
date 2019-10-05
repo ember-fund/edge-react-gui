@@ -6,12 +6,14 @@ import React, { Component } from 'react'
 import { Keyboard, StatusBar, StyleSheet, View } from 'react-native'
 import slowlog from 'react-native-slowlog'
 
+import ENV from '../../../env.json'
 import edgeBackgroundImage from '../../assets/images/edgeBackground/login_bg.jpg'
 import edgeLogo from '../../assets/images/edgeLogo/Edge_logo_L.png'
 import s from '../../locales/strings.js'
 import THEME from '../../theme/variables/airbitz.js'
 import type { Dispatch } from '../../types/reduxTypes.js'
 import { showHelpModal } from '../modals/HelpModal.js'
+import { showError } from '../services/AirshipInstance.js'
 
 type Props = {
   initializeAccount: (EdgeAccount, touchIdInfo: ?Object) => void,
@@ -25,11 +27,27 @@ type Props = {
 }
 type State = { key: number }
 
+let firstRun = true
+
 export default class Login extends Component<Props, State> {
   constructor (props: Props) {
     super(props)
     this.state = { key: 0 }
     slowlog(this, /.*/, global.slowlogOptions)
+  }
+
+  componentDidMount () {
+    const { YOLO_USERNAME, YOLO_PASSWORD } = ENV
+    if (YOLO_USERNAME != null && YOLO_PASSWORD != null && firstRun) {
+      const { context, initializeAccount } = this.props
+      firstRun = false
+      setTimeout(() => {
+        context
+          .loginWithPassword(YOLO_USERNAME, YOLO_PASSWORD)
+          .then(account => initializeAccount(account))
+          .catch(showError)
+      }, 500)
+    }
   }
 
   onLogin = (error: ?Error = null, account: ?EdgeAccount, touchIdInfo: ?Object = null) => {
