@@ -46,6 +46,7 @@ pipeline {
       steps {
         // Import the buildnums from previous build
         copyArtifacts projectName: "${JOB_NAME}", selector: lastCompleted(), optional: true
+
         // Fix version for branchs that are not "master" or "develop"
         script {
           def packageJson = readJSON file: "./package.json"

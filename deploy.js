@@ -16,6 +16,9 @@ let _currentPath = __dirname
  * Things we expect to be set in the config file:
  */
 type BuildConfigFile = {
+  // Common build options:
+  envJson: { [repoBranch: string]: Object },
+
   // Android build options:
   androidKeyStore: string,
   androidKeyStoreAlias: string,
@@ -116,6 +119,16 @@ function makeCommonPost (buildObj) {
     buildObj.version = packageJson.version + '-t'
   } else {
     buildObj.version = packageJson.version
+  }
+
+  if (buildObj.envJson != null) {
+    const envJsonPath = buildObj.guiDir + '/env.json'
+    let envJson = {}
+    if (fs.existsSync(envJsonPath)) {
+      envJson = JSON.parse(fs.readFileSync(envJsonPath, 'utf8'))
+    }
+    envJson = {...envJson, ...buildObj.envJson[buildObj.repoBranch]}
+    fs.writeFileSync(envJsonPath, JSON.stringify(envJson, null, 2))
   }
 
   const buildNumFile = buildObj.guiPlatformDir + '/buildnum.json'
